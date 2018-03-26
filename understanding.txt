@@ -1,0 +1,22 @@
+Git repo analyzer 
+ - clone github repos using JGit into local
+ - obtain fixes using commit history
+ - using JGit generate patch files (mostly possible)
+ 
+ - use Understand API to read patch files (research)
+ 
+ ALGO:
+ 
+ - output JSON/XML containing changes for each method 
+	 
+	 <method frequency=20>m1
+		<file>f.java</file>
+		<change>
+			<parameter oldtype="int" newtype="double">salary</parameter>
+		</change>
+		<change>
+			<ifstatement addcondition="true">salary \gt 0</ifstatement>
+		</change>
+	 </method>
+	 
+ - our algo generates above JSON/XML. The algo should be an "abstraction" which is not very generic or very specific. i.e. it should not be hardly coupled/coded to a particular type of change. 
