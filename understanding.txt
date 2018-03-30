@@ -20,3 +20,29 @@ Git repo analyzer
 	 </method>
 	 
  - our algo generates above JSON/XML. The algo should be an "abstraction" which is not very generic or very specific. i.e. it should not be hardly coupled/coded to a particular type of change. 
+
+ 
+Tasks:
+
+1. Get closed issues that have pull requests from Github 
+2. get code for corresponding commit
+
+
+3. for every commit apply patch on current version (initially starting with base version)
+4. keep on updating the UDBs and generate metrics and graphs using understand
+
+
+5. Compare consecutive UDBs to identify entity and relationship changes 
+6. Make entry in xml for each change for each project
+
+7. take collection of xmls and do pattern matching to identify common bugs
+ 
+ 
+ Links:
+ Understand Python API : https://scitools.com/support/python-api/
+ Git Patch Understanding : http://www.markusbe.com/2009/12/how-to-read-a-patch-or-diff-and-understand-its-structure-to-apply-it-manually/
+ 
+ 
+ 
+ 
+ 
