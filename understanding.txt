@@ -41,6 +41,7 @@ Tasks:
  Links:
  Understand Python API : https://scitools.com/support/python-api/
  Git Patch Understanding : http://www.markusbe.com/2009/12/how-to-read-a-patch-or-diff-and-understand-its-structure-to-apply-it-manually/
+ Manual : https://scitools.com/support/manuals/
  
  
  
