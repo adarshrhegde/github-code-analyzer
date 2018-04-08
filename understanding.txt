@@ -25,14 +25,14 @@ Git repo analyzer
 Tasks:
 
 1. Get closed issues that have pull requests from Github 
-2. get code for corresponding commit
+2. get code for corresponding commit  // pending : some commits checkout error
 
 
 3. for every commit apply patch on current version (initially starting with base version)
-4. keep on updating the UDBs and generate metrics and graphs using understand
+4. keep on updating the UDBs and generate metrics and graphs using understand //graphs to be generated
 
 
-5. Compare consecutive UDBs to identify entity and relationship changes 
+5. Compare consecutive UDBs to identify entity and relationship changes // to be checked for multiple files  
 6. Make entry in xml for each change for each project
 
 7. take collection of xmls and do pattern matching to identify common bugs
