@@ -26,13 +26,61 @@ def xml_elements_from_props():
 	        myprops[k] = v
 	return myprops
 
+def sortKeyFunc(ent):
+  return str.lower(ent.longname())
+ 
+def analyze_functions(db):
+	ents = db.ents("function,method,procedure")
+	for func in sorted(ents,key = sortKeyFunc):
+	  print (func.longname()," (",sep="",end="")
+	  first = True
+	  for param in func.ents("Define","Parameter"):
+	    if not first:
+	      print (", ",end="")
+	    print (param.type(),param,end="")
+	    first = False
+	  print (")")
+
+
+"""
+Returns a list of all filenames of given type
+"""
+def get_filenames(db, type, pkg_structure):
+
+	filenames = set()
+	size = len(type)
+	for entity in db.ents():
+		if entity.longname()[(-1*size):]==type:
+			#and pkg_structure in entity.longname()
+			filenames.add(entity.name())
+
+	return filenames
+
+
+def execute(db,db2,name, pkg_structure):
+	root = ET.Element("project")
+	root.set("name",name)
+	file_set1 = get_filenames(db,'.java',pkg_structure)
+	file_set2 = get_filenames(db2, '.java',pkg_structure)
+	filenames = set.intersection(file_set1,file_set2)
+
+	for file in filenames:
+		class_elem = ET.SubElement(root, "class")
+		class_elem.set("name",file)
+		analyze(db,db2,name,file,class_elem)
+
+	
+	tree = ET.ElementTree(root)
+	tree.write("changes.xml")	
+
+
 """ Analyze the diff using two understand database objects
 	Pick up the common files in each database and get the diff to identify changes
 	Once the diff code has been identified analyze the entities that are part of it
 	With this information populate the xml 
-
 """
-def analyze(db,db2,name):
+def analyze(db,db2,name,file_name,class_elem):
+	
 	#token_types = dict_values(['Keyword', 'Whitespace', 'Identifier', 'Punctuation', 'Identifier', 'Punctuation', 'Newline', 'Keyword', 'Identifier', 'Keyword', 'Keyword', 'Punctuation', 'Whitespace', 'Keyword', 'Keyword', 'Punctuation', 'Punctuation', 'Punctuation', 'Punctuation', 'Whitespace', 'Operator', 'Punctuation', 'Whitespace', 'Keyword', 'Keyword', 'Operator', 'Whitespace', 'String'])
 	accepted_token_types = ['Keyword']
 	kind_dict = {}
@@ -40,7 +88,7 @@ def analyze(db,db2,name):
 	token_dict = {}
 	xml_elements = xml_elements_from_props()
 
-	file = db.lookup('Main.java')[0]
+	file = db.lookup(file_name)[0]
 
 	list1 = []
 	for lexeme in file.lexer():
@@ -57,9 +105,7 @@ def analyze(db,db2,name):
 		#print('The lexeme entity token is  :' + str(lexeme.token()))
 		        
 
-	file2 = db2.lookup('Main.java')[0]
-	root = ET.Element("class")
-	root.set("name","Main.java")
+	file2 = db2.lookup(file_name)[0]
 	#print(file.lexer())
 	list2 = []
 	for lexeme in file2.lexer():
@@ -73,7 +119,7 @@ def analyze(db,db2,name):
 			token_dict[lexeme.text()] = lexeme.token()
 
 		#print(type_dict.keys(),type_dict.values())
-		print(token_dict.keys(),token_dict.values())
+	print(token_dict.keys(),token_dict.values())
 		#print(list2)
 
 	diff_result = diff.diff_result(list1,list2)
@@ -92,7 +138,7 @@ def analyze(db,db2,name):
 					print("Removed")
 				print("token>>",val)
 				if val in xml_elements:
-					elem = ET.SubElement(root, "change")
+					elem = ET.SubElement(class_elem, "change")
 					token_elem = ET.SubElement(elem,xml_elements[val])
 					#token_elem.set("addCondition","true")
 		else: 
@@ -104,8 +150,6 @@ def analyze(db,db2,name):
 			print("kind>>",kind_dict[val])
 			print("type>>",type_dict[val])
 
-	tree = ET.ElementTree(root)
-	tree.write("changes.xml")
 
 #entities which are class or function
 
@@ -164,8 +208,13 @@ for ent in db.ents("Global Object ~Static"):
 	
 db = understand.open("C:\\Understand\\Proj2.udb")
 db2 = understand.open("C:\\Understand\\Proj2-mod.udb")
+# for entity in db.ents():
+# 	if '.java' in entity.name():
+# 		print(entity.longname())
 
-analyze(db, db2, 'Dev-ops')
+#execute(db, db2, 'Dev-ops','abv')
+
+#analyze_functions(db)
 
 '''        
 #all information about the Functions
