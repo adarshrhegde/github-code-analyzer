@@ -25,18 +25,20 @@ Git repo analyzer
 Tasks:
 
 1. Get closed issues that have pull requests from Github 
-2. get code for corresponding commit
+2. get code for corresponding commit  // pending : do checkout for all pull requests
+3. for all pull request commits apply them  (initially starting with base version)
+4. keep on updating the UDBs and generate metrics and graphs using understand // use code to handle this 
 
+5. Compare consecutive UDBs to identify entity and relationship changes // to be checked for multiple files  
+if , while , for , class tag for each file , try , catch , null check , static , final , return , new 
+function call added , function parameter change , variable declaration , function prototype change 
+public class , new files added / deleted , rename a class 
+properties : mapping for xml , generating the xml
 
-3. for every commit apply patch on current version (initially starting with base version)
-4. keep on updating the UDBs and generate metrics and graphs using understand
-
-
-5. Compare consecutive UDBs to identify entity and relationship changes 
-6. Make entry in xml for each change for each project
-
-7. take collection of xmls and do pattern matching to identify common bugs
- 
+6. Make entry in xml for each change for each project : one type of change handled , to be done for all changes 
+   multiple projects  -- automate 
+   
+7. take collection of xmls and find count across all project to identify common bugs : handle specific change type 
  
  Links:
  Understand Python API : https://scitools.com/support/python-api/
