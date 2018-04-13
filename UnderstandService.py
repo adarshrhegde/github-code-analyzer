@@ -27,7 +27,7 @@ def getLexemes(db,file_name,kind_dict,type_dict,token_dict):
         else:
             token_dict[lexeme.text()] = lexeme.token()
 #            print('The lexeme entity token is  :' + str(lexeme.token()))
-    return list1,kind_dict,type_dict,token_dict
+    return list1
 
 
 """ Gets entity-xml_name mapping from properties file
@@ -120,8 +120,8 @@ def analyze(db,db2,name,file_name,class_elem):
 
     xml_elements = xml_elements_from_props()
 
-    list1,kind_dict,type_dict,token_dict=getLexemes(db,file_name,kind_dict,type_dict,token_dict)
-    list2,kind_dict,type_dict,token_dict=getLexemes(db2,file_name,kind_dict,type_dict,token_dict)
+    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict)
+    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict)
     diff_result = diff.diff_result(list1,list2)
 #    print((diff_result))
     for key in diff_result:
