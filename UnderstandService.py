@@ -8,6 +8,27 @@ Service Fetch understand metadata data (entities and relationships, lexemes )
 import understand
 import diff
 import xml.etree.ElementTree as ET
+import subprocess
+import logging
+
+
+"""
+Create a understand database from the source code
+"""
+def create_udb(udb_path, language, project_root):
+	try:
+		output = subprocess.check_output("und create -db {udb_path} -languages {lang}".format(udb_path=udb_path, lang=language),shell=True)
+		logging.info(output)
+		output = subprocess.check_output("und add -db {udb_path} {project}".format(udb_path=udb_path, project=project_root), shell=True)
+		logging.info(output)
+		output = subprocess.check_output("und analyze {udb_path}".format(udb_path=udb_path), shell=True)
+		logging.info(output)
+	except subprocess.CalledProcessError as e:
+		logging.exception(e.output)
+		logging.fatal("udb creation failed")
+		raise Exception
+
+
 
 """""
 get all lexemes and tokens for a file 
@@ -173,8 +194,8 @@ for ent in db.ents("Global Object ~Static"):
 ''' 
 
 	
-db6 = understand.open("C:\\Users\\ashwa\\MyUnderstandProject7.udb")
-db7 = understand.open("C:\\Users\\ashwa\\MyUnderstandProject8.udb")
+db6 = understand.open("C:\\Understand\\v6.udb")
+db7 = understand.open("C:\\Understand\\v2.udb")
 # for entity in db.ents():
 # 	if '.java' in entity.name():
 # 		print(entity.longname())
@@ -182,7 +203,7 @@ db7 = understand.open("C:\\Users\\ashwa\\MyUnderstandProject8.udb")
 execute(db6, db7, 'Dev-ops','ASE')
 db6.close() 
 db7.close() 
-
+#create_udb("C:\\Understand\\v6.udb", "java", "C:\\adarsh_hegde_ashwani_khemani_srinath_kv_hw1")
 #analyze_functions(db)
 
 '''        
