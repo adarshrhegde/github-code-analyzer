@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-
 Service Fetch understand metadata data (entities and relationships, lexemes )
-
 """
 
 import understand
@@ -11,7 +9,6 @@ import xml.etree.ElementTree as ET
 
 """"
 Get the modifications done for the lexemes 
-
 """""
 
 def getModifications(lexeme_context,lexeme_context_new):
@@ -22,24 +19,28 @@ def getModifications(lexeme_context,lexeme_context_new):
                 if(lexeme_context[key][1]==lexeme_context_new[key][1]):
                     if(lexeme_context[key][0]!=lexeme_context_new[key][0]):
                         list_changes.append((str(lexeme_context[key][0]),str(lexeme_context_new[key][0])))
+        else:
+            list_changes.append((str(lexeme_context[key][0]),"deleted"))
+#    print("new"+str(lexeme_context_new.keys()))
+#    print("old"+str(lexeme_context.keys()))
+    for key in lexeme_context_new.keys():
+        if key not in lexeme_context.keys():
+#            print("key added"+str(key))
+            list_changes.append(((str(key)),"added"))
+    print(list_changes)
     return list_changes
 
 
 """""
-get all lexemes and tokens for a file 
+Get all lexemes and tokens for a file 
 """""
 
 def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context):
     file = db.lookup(file_name)[0]
     list1 = []
-    print("file_name",str(file_name))
-    print()
     for lexeme in file.lexer():
 
         list1.append(lexeme.text())
-        
-#        print("The lexeme is "+str(lexeme.text()))
-#        print("The lexeme ent is :"+str(lexeme.ent()))
         if(str(lexeme.previous())!='None'):
             if(str(lexeme.previous().token()) in ('Whitespace','Punctuation')):
                 if(str(lexeme.previous().previous())!='None'):
@@ -107,13 +108,11 @@ def get_filenames(db, type, pkg_structure):
 	size = len(type)
 	for entity in db.ents():
 		if entity.longname()[(-1*size):]==type:
-			#and pkg_structure in entity.longname()
 			filenames.add(entity.name())
 
 	return filenames
 
 """""
-
 This function creates a template for the xml 
 It creates nodes for different files in a project 
 Then it does the analysis on the changed files 
@@ -144,9 +143,9 @@ def execute(db,db2,name, pkg_structure):
 	Once the diff code has been identified analyze the entities that are part of it
 	With this information populate the xml 
 """
+
 def analyze(db,db2,name,file_name,class_elem):
 	
-	#token_types = dict_values(['Keyword', 'Whitespace', 'Identifier', 'Punctuation', 'Identifier', 'Punctuation', 'Newline', 'Keyword', 'Identifier', 'Keyword', 'Keyword', 'Punctuation', 'Whitespace', 'Keyword', 'Keyword', 'Punctuation', 'Punctuation', 'Punctuation', 'Punctuation', 'Whitespace', 'Operator', 'Punctuation', 'Whitespace', 'Keyword', 'Keyword', 'Operator', 'Whitespace', 'String'])
     accepted_token_types = ['Keyword']
     kind_dict = {}
     type_dict = {}
@@ -157,13 +156,10 @@ def analyze(db,db2,name,file_name,class_elem):
     data_types={'int','char','float','double','long','short','byte','boolean'}
 
     xml_elements = xml_elements_from_props()
-
+    print("Analyzing"+str(file_name))
     list1=[]
-#    print(kind_dict)
-    list1=getLexemes(db,"DevOpsUtils.java",kind_dict,type_dict,token_dict,lexeme_context)
-    list2=getLexemes(db2,"DevOpsUtils.java",kind_dict,type_dict,token_dict,lexeme_context_new)
-#    print(lexeme_context)
-#    print(lexeme_context_new)
+    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context)
+    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict,lexeme_context_new)
     diff_result = diff.diff_result(list1,list2)
     for key in diff_result:
         val = diff_result[key][2:]
@@ -174,68 +170,35 @@ def analyze(db,db2,name,file_name,class_elem):
                     status="Added"
                 elif sign=='-':
                     status="Removed"
-#                print(status)
                 if val in xml_elements:
                     elem = ET.SubElement(class_elem, "change")
                     token_elem = ET.SubElement(elem,xml_elements[val])
-                    if(val in data_types):
-                        token_elem.set("Type",val)
-                    elem.set("name",status)
-                else: 
-                    if sign=='+':
-                        print("Added")
-                    elif sign=='-':
-                        print("Removed")
+                    elem.set("type",status)
+
     changes=getModifications(lexeme_context,lexeme_context_new)
     for change in changes:
-    
-        print("old is "+change[0])
-        elem = ET.SubElement(class_elem, "change")
-        param = ET.SubElement(elem, "parameter")
-        if(change[0] in data_types):
+        if(change[0] in data_types and change[1] in data_types):
+            elem = ET.SubElement(class_elem, "change")
+            param = ET.SubElement(elem, "parameter")
             param.set("oldType",change[0])    
             param.set("newType",change[1])
-            elem.set("name","Modified")
-
-
-
-'''
-print(db.ents())
-for ent in sorted(db.ents(),key= lambda ent: ent.name()):
-  print (ent.name(),"  [",ent.kindname(),"]",sep="",end="\n")
-'''
-'''
-for func in db.ents("function,method,procedure"):
-  file = "D:\\git\\adarsh_hegde_ashwani_khemani_srinath_kv_hw2\\result\\callby_" + func.name() + ".png"
-  print (func.longname(),"->",file)
-  func.draw("Called By",file)
-
-print(db.ents("Global Object ~Static"))
-for ent in db.ents("Global Object ~Static"):
-  print (ent,":",sep="")
-  for ref in ent.refs():
-    print (ref.kindname(),ref.ent(),ref.file(),"(",ref.line(),",",ref.column(),")")
-  print ("\n",end="")
-
-
-''' 
-
-	
+            elem.set("type","Modified")
+        if(change[0] in data_types and change[1]=="added"):
+            elem = ET.SubElement(class_elem, "change")
+            param = ET.SubElement(elem, "parameter")
+            param.set("oldType","None")    
+            param.set("newType",change[0])
+            elem.set("type","Added")        
+        if(change[0] in data_types and change[1]=="deleted"):
+            elem = ET.SubElement(class_elem, "change")
+            param = ET.SubElement(elem, "parameter")
+            param.set("oldType",change[0])    
+            param.set("newType","None")
+            elem.set("type","Deleted")
+            
 db6 = understand.open("C:\\Users\\ashwa\\MyUnderstandProject7.udb")
 db7 = understand.open("C:\\Users\\ashwa\\MyUnderstandProject8.udb")
-# for entity in db.ents():
-# 	if '.java' in entity.name():
-# 		print(entity.longname())
 
 execute(db6, db7, 'Dev-ops','ASE')
 db6.close() 
 db7.close() 
-
-#analyze_functions(db)
-
-'''        
-#all information about the Functions
-#for func in db.ents("function,method,procedure"):
-#  for line in func.ib():
-#    print(line,end="")
-'''
