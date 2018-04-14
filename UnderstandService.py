@@ -12,6 +12,33 @@ import subprocess
 import logging
 import graph as g
 
+""""
+Get the modifications done for the lexemes 
+"""""
+
+def getModifications(lexeme_context,lexeme_context_new):
+    list_changes=[]
+    for key in lexeme_context.keys():
+        if key in lexeme_context_new.keys():
+            if(len(lexeme_context[key])>1):
+#                print(lexeme_context[key])
+#                print(lexeme_context_new[key])
+                if(lexeme_context[key][1]==lexeme_context_new[key][1]):
+#                    print(lexeme_context[key][0])
+#                    print(lexeme_context_new[key][0])
+                    if(lexeme_context[key][0]!=lexeme_context_new[key][0]):
+#                        print(lexeme_context[key][0])
+#                        print(lexeme_context_new[key][0])
+                        list_changes.append((key,str(lexeme_context[key][0]),str(lexeme_context_new[key][0]),"modified"))
+        else:
+            list_changes.append((str(lexeme_context[key][0]),"deleted"))
+#    print("new"+str(lexeme_context_new.keys()))
+#    print("old"+str(lexeme_context.keys()))
+    for key in lexeme_context_new.keys():
+        if key not in lexeme_context.keys():
+            list_changes.append((key,str(lexeme_context_new[key][0]),"added"))
+#    print(list_changes)
+    return list_changes
 
 """
 Create a understand database from the source code
@@ -33,23 +60,52 @@ def create_udb(udb_path, language, project_root):
 #create_udb("C:\\Understand\\v11.udb",'java',"D:\\versions\\2\\adarsh_hegde_ashwani_khemani_srinath_kv_hw1")
 
 """""
-get all lexemes and tokens for a file 
+Get all lexemes and tokens for a file 
 """""
-def getLexemes(db,file_name,kind_dict,type_dict,token_dict):
+
+def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context,loop_context):
     file = db.lookup(file_name)[0]
     list1 = []
     for lexeme in file.lexer():
-
         list1.append(lexeme.text())
+        if(str(lexeme.previous())!='None'):
+        #getting variable declaration changes     
+            if(str(lexeme.previous().token()) in ('Whitespace','Punctuation')):
+                if(str(lexeme.previous().previous())!='None'):
+                    lexeme_context[lexeme.text()]=[lexeme.previous().previous().text()]
+                else:
+                    lexeme_context[lexeme.text()]=[lexeme.previous().text()]
+                    
+        #getting loops condition changes:
+        loop_constructs={'if','for','while'}
+        getcondtion=""
+        if(lexeme.text() in loop_constructs):
+            next_lexeme=lexeme.next()
+            while(lexeme.next()!='None' and next_lexeme.text()!=')'):
+                next_lexeme=next_lexeme.next()
+                if(not next_lexeme.text()==')'):
+                    getcondtion+=next_lexeme.text()
+#            print(getcondtion)  
+            loop_context[lexeme.text()]=[getcondtion]
+            loop_context[lexeme.text()].append(lexeme.line_begin())
+
 
         if lexeme.ent():
             kind_dict[lexeme.text()] = lexeme.ent().kind();
             type_dict[lexeme.text()] = lexeme.ent().type();
-#            print('The lexeme entity kind is :' + str(lexeme.ent().kind()))
-#            print('The lexeme entity type is  :' + str(lexeme.ent().type()))
+            if(lexeme.ent().type()!='NoneType'):
+                for eref in lexeme.ent().refs():
+#                    if(eref.kind().name()=='Define'):
+                    if lexeme.text() in lexeme_context.keys():
+                        lexeme_context[lexeme.text()].append(eref.line()) 
+#                        lexeme_context[lexeme.text()].append(eref.kind())
         else:
-            token_dict[lexeme.text()] = lexeme.token()
-#            print('The lexeme entity token is  :' + str(lexeme.token()))
+            if(str(lexeme.token()) not in ('Whitespace','Punctuation','Newline')):
+                token_dict[lexeme.text()] = lexeme.token()
+                if lexeme.text() in lexeme_context.keys():
+                    lexeme_context[lexeme.text()].append(lexeme.line_begin())
+#    print(list1)
+#    print(loop_context)
     return list1
 
 
@@ -137,82 +193,77 @@ def execute(db,db2,name, pkg_structure):
 """
 def analyze(db,db2,name,file_name,class_elem):
 	
-	#token_types = dict_values(['Keyword', 'Whitespace', 'Identifier', 'Punctuation', 'Identifier', 'Punctuation', 'Newline', 'Keyword', 'Identifier', 'Keyword', 'Keyword', 'Punctuation', 'Whitespace', 'Keyword', 'Keyword', 'Punctuation', 'Punctuation', 'Punctuation', 'Punctuation', 'Whitespace', 'Operator', 'Punctuation', 'Whitespace', 'Keyword', 'Keyword', 'Operator', 'Whitespace', 'String'])
     accepted_token_types = ['Keyword']
     kind_dict = {}
     type_dict = {}
     token_dict = {}
+    lexeme_context={}
+    lexeme_context_new={}
+    loop_context={}
+    loop_context_new={}
+    data_types={'int','char','float','double','long','short','byte','boolean'}
 
     xml_elements = xml_elements_from_props()
-
-    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict)
-    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict)
+    print("Analyzing"+str(file_name))
+    list1=[]
+    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context,loop_context)
+    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict,lexeme_context_new,loop_context_new)
     diff_result = diff.diff_result(list1,list2)
-#    print((diff_result))
     for key in diff_result:
         val = diff_result[key][2:]
         sign = diff_result[key][0:1]
-
         if val in token_dict:
             if token_dict[val] in accepted_token_types:
                 if sign=='+':
-                    print("Added")
                     status="Added"
                 elif sign=='-':
-                    print("Removed")
                     status="Removed"
-#				print("token>>",val)
                 if val in xml_elements:
                     elem = ET.SubElement(class_elem, "change")
                     token_elem = ET.SubElement(elem,xml_elements[val])
-                    elem.set("name",status)
-                else: 
-                    if sign=='+':
-                        print("Added")
-                    elif sign=='-':
-                        print("Removed")
-#			print("entity>>",val)
-#			print("kind>>",kind_dict[val])
-#			print("type>>",type_dict[val])
+                    elem.set("type",status)
+
+    changes=getModifications(lexeme_context,lexeme_context_new)
+    changes_loops=(getModifications(loop_context,loop_context_new))
+
+    loop_constructs={'if','for','while','do'}
+    for change in changes_loops:
+#        print(change)
+        if(change[0] in loop_constructs and change[len(change)-1]!='modified'):
+#            print(change)
+            elem = ET.SubElement(class_elem, "change")
+            param = ET.SubElement(elem, change[0]+"statement")
+            param.set("addcondition","True")
+            if(change[0]=='for'):
+                param.set("condition",change[1].split(';')[1])
+            elem.set("type",change[len(change)-1])
+        elif(change[len(change)-1]=='modified'):
+#            print(change)
+            elem1 = ET.SubElement(class_elem, "change")
+            param1 = ET.SubElement(elem1, change[0]+"statement")
+            param1.set("changecondition","True")
+            param1.set("condition",change[2])
+            elem1.set("type",change[len(change)-1])
+        
+    for change in changes:   
+        if(change[0] in data_types and change[1] in data_types):
+            elem = ET.SubElement(class_elem, "change")
+            param = ET.SubElement(elem, "parameter")
+            param.set("oldType",change[0])    
+            param.set("newType",change[1])
+            elem.set("type","Modified")
+        
+        if(change[0] in data_types and change[1]=="added"):
+            elem = ET.SubElement(class_elem, "change")
+            param = ET.SubElement(elem, "parameter")
+            param.set("oldType","None")    
+            param.set("newType",change[0])
+            elem.set("type","Added")        
+        if(change[0] in data_types and change[1]=="deleted"):
+            elem = ET.SubElement(class_elem, "change")
+            param = ET.SubElement(elem, "parameter")
+            param.set("oldType",change[0])    
+            param.set("newType","None")
+            elem.set("type","Deleted")
 
 
-'''
-print(db.ents())
-for ent in sorted(db.ents(),key= lambda ent: ent.name()):
-  print (ent.name(),"  [",ent.kindname(),"]",sep="",end="\n")
-'''
-'''
-for func in db.ents("function,method,procedure"):
-  file = "D:\\git\\adarsh_hegde_ashwani_khemani_srinath_kv_hw2\\result\\callby_" + func.name() + ".png"
-  print (func.longname(),"->",file)
-  func.draw("Called By",file)
-
-print(db.ents("Global Object ~Static"))
-for ent in db.ents("Global Object ~Static"):
-  print (ent,":",sep="")
-  for ref in ent.refs():
-    print (ref.kindname(),ref.ent(),ref.file(),"(",ref.line(),",",ref.column(),")")
-  print ("\n",end="")
-
-
-''' 
-
-	
-#db6 = understand.open("C:\\Understand\\v6.udb")
-#db7 = understand.open("C:\\Understand\\v2.udb")
-# for entity in db.ents():
-# 	if '.java' in entity.name():
-# 		print(entity.longname())
-
-#execute(db6, db7, 'Dev-ops','ASE')
-#db6.close() 
-#db7.close() 
-#create_udb("C:\\Understand\\v6.udb", "java", "C:\\adarsh_hegde_ashwani_khemani_srinath_kv_hw1")
-#analyze_functions(db)
-
-'''        
-#all information about the Functions
-#for func in db.ents("function,method,procedure"):
-#  for line in func.ib():
-#    print(line,end="")
-'''
