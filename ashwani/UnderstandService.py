@@ -16,18 +16,23 @@ def getModifications(lexeme_context,lexeme_context_new):
     for key in lexeme_context.keys():
         if key in lexeme_context_new.keys():
             if(len(lexeme_context[key])>1):
+#                print(lexeme_context[key])
+#                print(lexeme_context_new[key])
                 if(lexeme_context[key][1]==lexeme_context_new[key][1]):
+#                    print(lexeme_context[key][0])
+#                    print(lexeme_context_new[key][0])
                     if(lexeme_context[key][0]!=lexeme_context_new[key][0]):
-                        list_changes.append((str(lexeme_context[key][0]),str(lexeme_context_new[key][0])))
+#                        print(lexeme_context[key][0])
+#                        print(lexeme_context_new[key][0])
+                        list_changes.append((key,str(lexeme_context[key][0]),str(lexeme_context_new[key][0]),"modified"))
         else:
             list_changes.append((str(lexeme_context[key][0]),"deleted"))
 #    print("new"+str(lexeme_context_new.keys()))
 #    print("old"+str(lexeme_context.keys()))
     for key in lexeme_context_new.keys():
         if key not in lexeme_context.keys():
-#            print("key added"+str(key))
-            list_changes.append(((str(key)),"added"))
-    print(list_changes)
+            list_changes.append((key,str(lexeme_context_new[key][0]),"added"))
+#    print(list_changes)
     return list_changes
 
 
@@ -35,19 +40,33 @@ def getModifications(lexeme_context,lexeme_context_new):
 Get all lexemes and tokens for a file 
 """""
 
-def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context):
+def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context,loop_context):
     file = db.lookup(file_name)[0]
     list1 = []
     for lexeme in file.lexer():
-
         list1.append(lexeme.text())
         if(str(lexeme.previous())!='None'):
+        #getting variable declaration changes     
             if(str(lexeme.previous().token()) in ('Whitespace','Punctuation')):
                 if(str(lexeme.previous().previous())!='None'):
                     lexeme_context[lexeme.text()]=[lexeme.previous().previous().text()]
                 else:
                     lexeme_context[lexeme.text()]=[lexeme.previous().text()]
-            
+                    
+        #getting loops condition changes:
+        loop_constructs={'if','for','while'}
+        getcondtion=""
+        if(lexeme.text() in loop_constructs):
+            next_lexeme=lexeme.next()
+            while(lexeme.next()!='None' and next_lexeme.text()!=')'):
+                next_lexeme=next_lexeme.next()
+                if(not next_lexeme.text()==')'):
+                    getcondtion+=next_lexeme.text()
+#            print(getcondtion)  
+            loop_context[lexeme.text()]=[getcondtion]
+            loop_context[lexeme.text()].append(lexeme.line_begin())
+
+
         if lexeme.ent():
             kind_dict[lexeme.text()] = lexeme.ent().kind();
             type_dict[lexeme.text()] = lexeme.ent().type();
@@ -56,18 +75,19 @@ def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context):
 #                    if(eref.kind().name()=='Define'):
                     if lexeme.text() in lexeme_context.keys():
                         lexeme_context[lexeme.text()].append(eref.line()) 
-#                        lexeme_context[lexeme.text()].append(eref.kind())                         
+#                        lexeme_context[lexeme.text()].append(eref.kind())
         else:
             if(str(lexeme.token()) not in ('Whitespace','Punctuation','Newline')):
                 token_dict[lexeme.text()] = lexeme.token()
                 if lexeme.text() in lexeme_context.keys():
                     lexeme_context[lexeme.text()].append(lexeme.line_begin())
+#    print(list1)
+#    print(loop_context)
     return list1
 
 
 """ Gets entity-xml_name mapping from properties file
 	For eg. entity 'if' is represented as 'ifstatement' in the xml
-
 """
         
 def xml_elements_from_props():
@@ -152,14 +172,15 @@ def analyze(db,db2,name,file_name,class_elem):
     token_dict = {}
     lexeme_context={}
     lexeme_context_new={}
-
+    loop_context={}
+    loop_context_new={}
     data_types={'int','char','float','double','long','short','byte','boolean'}
 
     xml_elements = xml_elements_from_props()
     print("Analyzing"+str(file_name))
     list1=[]
-    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context)
-    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict,lexeme_context_new)
+    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context,loop_context)
+    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict,lexeme_context_new,loop_context_new)
     diff_result = diff.diff_result(list1,list2)
     for key in diff_result:
         val = diff_result[key][2:]
@@ -176,13 +197,35 @@ def analyze(db,db2,name,file_name,class_elem):
                     elem.set("type",status)
 
     changes=getModifications(lexeme_context,lexeme_context_new)
-    for change in changes:
+    changes_loops=(getModifications(loop_context,loop_context_new))
+
+    loop_constructs={'if','for','while','do'}
+    for change in changes_loops:
+#        print(change)
+        if(change[0] in loop_constructs and change[len(change)-1]!='modified'):
+#            print(change)
+            elem = ET.SubElement(class_elem, "change")
+            param = ET.SubElement(elem, change[0]+"statement")
+            param.set("addcondition","True")
+            if(change[0]=='for'):
+                param.set("condition",change[1].split(';')[1])
+            elem.set("type",change[len(change)-1])
+        elif(change[len(change)-1]=='modified'):
+#            print(change)
+            elem1 = ET.SubElement(class_elem, "change")
+            param1 = ET.SubElement(elem1, change[0]+"statement")
+            param1.set("changecondition","True")
+            param1.set("condition",change[1])
+            elem1.set("type",change[len(change)-1])
+        
+    for change in changes:   
         if(change[0] in data_types and change[1] in data_types):
             elem = ET.SubElement(class_elem, "change")
             param = ET.SubElement(elem, "parameter")
             param.set("oldType",change[0])    
             param.set("newType",change[1])
             elem.set("type","Modified")
+        
         if(change[0] in data_types and change[1]=="added"):
             elem = ET.SubElement(class_elem, "change")
             param = ET.SubElement(elem, "parameter")
