@@ -50,6 +50,7 @@ properties : mapping for xml , generating the xml
  Manual : https://scitools.com/support/manuals/
  
  
+ https://networkx.github.io/documentation/networkx-1.10/tutorial/tutorial.html
  
  
  

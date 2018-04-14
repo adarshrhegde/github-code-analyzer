@@ -194,15 +194,15 @@ for ent in db.ents("Global Object ~Static"):
 ''' 
 
 	
-db6 = understand.open("C:\\Understand\\v6.udb")
-db7 = understand.open("C:\\Understand\\v2.udb")
+#db6 = understand.open("C:\\Understand\\v6.udb")
+#db7 = understand.open("C:\\Understand\\v2.udb")
 # for entity in db.ents():
 # 	if '.java' in entity.name():
 # 		print(entity.longname())
 
-execute(db6, db7, 'Dev-ops','ASE')
-db6.close() 
-db7.close() 
+#execute(db6, db7, 'Dev-ops','ASE')
+#db6.close() 
+#db7.close() 
 #create_udb("C:\\Understand\\v6.udb", "java", "C:\\adarsh_hegde_ashwani_khemani_srinath_kv_hw1")
 #analyze_functions(db)
 
