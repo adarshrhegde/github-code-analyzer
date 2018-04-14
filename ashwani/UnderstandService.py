@@ -9,6 +9,22 @@ import understand
 import diff
 import xml.etree.ElementTree as ET
 
+""""
+Get the modifications done for the lexemes 
+
+"""""
+
+def getModifications(lexeme_context,lexeme_context_new):
+    list_changes=[]
+    for key in lexeme_context.keys():
+        if key in lexeme_context_new.keys():
+            if(len(lexeme_context[key])>1):
+                if(lexeme_context[key][1]==lexeme_context_new[key][1]):
+                    if(lexeme_context[key][0]!=lexeme_context_new[key][0]):
+                        list_changes.append((str(lexeme_context[key][0]),str(lexeme_context_new[key][0])))
+    return list_changes
+
+
 """""
 get all lexemes and tokens for a file 
 """""
@@ -144,11 +160,10 @@ def analyze(db,db2,name,file_name,class_elem):
 
     list1=[]
 #    print(kind_dict)
-    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context)
-    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict,lexeme_context_new)
-    print(lexeme_context)
-    print(lexeme_context_new)
-    getModifications(lexeme_context,lexeme_context_new)
+    list1=getLexemes(db,"DevOpsUtils.java",kind_dict,type_dict,token_dict,lexeme_context)
+    list2=getLexemes(db2,"DevOpsUtils.java",kind_dict,type_dict,token_dict,lexeme_context_new)
+#    print(lexeme_context)
+#    print(lexeme_context_new)
     diff_result = diff.diff_result(list1,list2)
     for key in diff_result:
         val = diff_result[key][2:]
@@ -171,6 +186,18 @@ def analyze(db,db2,name,file_name,class_elem):
                         print("Added")
                     elif sign=='-':
                         print("Removed")
+    changes=getModifications(lexeme_context,lexeme_context_new)
+    for change in changes:
+    
+        print("old is "+change[0])
+        elem = ET.SubElement(class_elem, "change")
+        param = ET.SubElement(elem, "parameter")
+        if(change[0] in data_types):
+            param.set("oldType",change[0])    
+            param.set("newType",change[1])
+            elem.set("name","Modified")
+
+
 
 '''
 print(db.ents())
