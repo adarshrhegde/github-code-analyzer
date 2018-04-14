@@ -18,10 +18,10 @@ Create graph nodes in a recursive fashion
 def create_graph_node(G, my_node):
     for ent in db.ents():
         if ent.parent() !=None and ent.parent().longname() == my_node.longname() :
-            print("kind",ent.kind())
+            #print("kind",ent.kind())
             G.add_node(ent.longname(), entity=ent)
             G.add_edge(my_node.longname(),ent.longname(), relationship=ent.kind())
-            print("ent",ent.longname(),"kind",G[my_node.longname()][ent.longname()]["relationship"])
+            #print("ent",ent.longname(),"kind",G[my_node.longname()][ent.longname()]["relationship"])
             create_graph_node(G, ent)
     
 
