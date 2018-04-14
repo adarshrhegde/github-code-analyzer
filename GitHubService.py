@@ -154,7 +154,7 @@ def process(sha_list,projectname,udb_path,project_root):
                 print(udb_path)
                 db1 = understand.open(r''+udb_path+'1.udb')
                 db2 = understand.open(r''+udb_path+'2.udb')                
-                #execute(db1,db2,projectname, project_root)
+                execute(db1,db2,projectname, project_root)
                 print("Execute called")
                 db1.close()
                 db2.close()

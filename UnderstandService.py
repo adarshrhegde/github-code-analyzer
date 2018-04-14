@@ -10,6 +10,7 @@ import diff
 import xml.etree.ElementTree as ET
 import subprocess
 import logging
+import graph as g
 
 
 """
@@ -100,12 +101,12 @@ def get_filenames(db, type, pkg_structure):
 
 	return filenames
 
-"""""
+"""
 
 This function creates a template for the xml 
 It creates nodes for different files in a project 
 Then it does the analysis on the changed files 
-"""""
+"""
 
 def execute(db,db2,name, pkg_structure):
     root = ET.Element("project")
@@ -122,6 +123,7 @@ def execute(db,db2,name, pkg_structure):
         class_elem = ET.SubElement(root, "class")
         class_elem.set("name",file)
 
+        g.generate(db,db2,file, class_elem)
         analyze(db,db2,name,file,class_elem)
         graph.generate(db,db2,file,class_elem)
 
