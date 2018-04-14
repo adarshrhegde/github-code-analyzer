@@ -125,7 +125,6 @@ def execute(db,db2,name, pkg_structure):
 
         g.generate(db,db2,file, class_elem)
         analyze(db,db2,name,file,class_elem)
-        graph.generate(db,db2,file,class_elem)
 
     tree = ET.ElementTree(root)
     tree.write("changes.xml")	
