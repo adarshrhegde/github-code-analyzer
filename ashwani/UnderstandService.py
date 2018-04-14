@@ -215,7 +215,7 @@ def analyze(db,db2,name,file_name,class_elem):
             elem1 = ET.SubElement(class_elem, "change")
             param1 = ET.SubElement(elem1, change[0]+"statement")
             param1.set("changecondition","True")
-            param1.set("condition",change[1])
+            param1.set("condition",change[2])
             elem1.set("type",change[len(change)-1])
         
     for change in changes:   
