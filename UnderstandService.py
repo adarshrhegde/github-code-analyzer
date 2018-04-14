@@ -28,7 +28,8 @@ def create_udb(udb_path, language, project_root):
 		logging.fatal("udb creation failed")
 		raise Exception
 
-
+#create_udb("C:\\Understand\\v10.udb",'java',"D:\\versions\\1\\adarsh_hegde_ashwani_khemani_srinath_kv_hw1")
+#create_udb("C:\\Understand\\v11.udb",'java',"D:\\versions\\2\\adarsh_hegde_ashwani_khemani_srinath_kv_hw1")
 
 """""
 get all lexemes and tokens for a file 
@@ -120,7 +121,9 @@ def execute(db,db2,name, pkg_structure):
     for file in filenames:
         class_elem = ET.SubElement(root, "class")
         class_elem.set("name",file)
+
         analyze(db,db2,name,file,class_elem)
+        graph.generate(db,db2,file,class_elem)
 
     tree = ET.ElementTree(root)
     tree.write("changes.xml")	
