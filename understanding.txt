@@ -24,13 +24,16 @@ Git repo analyzer
  
 Tasks:
 
-1. Get closed issues that have pull requests from Github 
-2. get code for corresponding commit  // pending : do checkout for all pull requests
-3. for all pull request commits apply them  (initially starting with base version)
-4. keep on updating the UDBs and generate metrics and graphs using understand // use code to handle this 
+1. Get closed issues that have pull requests from Github -- done 
+2. get code for corresponding commit  // pending : do checkout for all pull requests : done 
+3. for all pull request commits apply them  (initially starting with base version) : done 
+to do : this for for multiple udbs
+4. keep on updating the UDBs and generate metrics and graphs using understand // use code to handle this : done 
+// grouping of commits
 
-5. Compare consecutive UDBs to identify entity and relationship changes // to be checked for multiple files  
-if , while , for , class tag for each file , try , catch , null check , static , final , return , new 
+5. Compare consecutive UDBs to identify entity and relationship changes // to be checked for multiple files : done 
+// to be done for existing multiple projects 
+all java keywords handling : done for addition and deletion , //modification to do 
 function call added , function parameter change , variable declaration , function prototype change 
 public class , new files added / deleted , rename a class 
 properties : mapping for xml , generating the xml
@@ -40,6 +43,7 @@ properties : mapping for xml , generating the xml
    
 7. take collection of xmls and find count across all project to identify common bugs : handle specific change type 
  
+
  Links:
  Understand Python API : https://scitools.com/support/python-api/
  Git Patch Understanding : http://www.markusbe.com/2009/12/how-to-read-a-patch-or-diff-and-understand-its-structure-to-apply-it-manually/
