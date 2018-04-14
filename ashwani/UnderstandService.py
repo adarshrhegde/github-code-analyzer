@@ -12,33 +12,39 @@ import xml.etree.ElementTree as ET
 """""
 get all lexemes and tokens for a file 
 """""
-def getLexemes(db,file_name,kind_dict,type_dict,token_dict):
+
+def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context):
     file = db.lookup(file_name)[0]
     list1 = []
-    print(file_name)
+    print("file_name",str(file_name))
+    print()
     for lexeme in file.lexer():
 
         list1.append(lexeme.text())
-
+        
+#        print("The lexeme is "+str(lexeme.text()))
+#        print("The lexeme ent is :"+str(lexeme.ent()))
+        if(str(lexeme.previous())!='None'):
+            if(str(lexeme.previous().token()) in ('Whitespace','Punctuation')):
+                if(str(lexeme.previous().previous())!='None'):
+                    lexeme_context[lexeme.text()]=[lexeme.previous().previous().text()]
+                else:
+                    lexeme_context[lexeme.text()]=[lexeme.previous().text()]
+            
         if lexeme.ent():
             kind_dict[lexeme.text()] = lexeme.ent().kind();
             type_dict[lexeme.text()] = lexeme.ent().type();
             if(lexeme.ent().type()!='NoneType'):
-#                print(lexeme.ent().refs()[0].kind())
-                if(lexeme.ent().refs()[0].kind().name()=='Define'):
-                    print(lexeme.ent())
-                    print("the entity that was referenced.",lexeme.ent().refs()[0].ent().name())
-                    print("entity performing the reference",lexeme.ent().refs()[0].scope())
-                    print("reference at ",lexeme.ent().refs()[0].line())
-                    print("file name",lexeme.ent().refs()[0].file())
-                    
-                    
-#                print(lexeme.ent().refs()[0].line())
-#            print('The lexeme entity kind is :' + str(lexeme.ent().kind()))
-#            print('The lexeme entity type is  :' + str(lexeme.ent().type()))
+                for eref in lexeme.ent().refs():
+#                    if(eref.kind().name()=='Define'):
+                    if lexeme.text() in lexeme_context.keys():
+                        lexeme_context[lexeme.text()].append(eref.line()) 
+#                        lexeme_context[lexeme.text()].append(eref.kind())                         
         else:
-            token_dict[lexeme.text()] = lexeme.token()
-#            print('The lexeme entity token is  :' + str(lexeme.token()))
+            if(str(lexeme.token()) not in ('Whitespace','Punctuation','Newline')):
+                token_dict[lexeme.text()] = lexeme.token()
+                if lexeme.text() in lexeme_context.keys():
+                    lexeme_context[lexeme.text()].append(lexeme.line_begin())
     return list1
 
 
@@ -49,7 +55,7 @@ def getLexemes(db,file_name,kind_dict,type_dict,token_dict):
         
 def xml_elements_from_props():
 	myprops = {}
-	with open('elements.properties', 'r') as f:
+	with open('../elements.properties', 'r') as f:
 	    for line in f:
 	        line = line.rstrip() #removes trailing whitespace and '\n' chars
 
@@ -129,25 +135,31 @@ def analyze(db,db2,name,file_name,class_elem):
     kind_dict = {}
     type_dict = {}
     token_dict = {}
+    lexeme_context={}
+    lexeme_context_new={}
+
     data_types={'int','char','float','double','long','short','byte','boolean'}
 
     xml_elements = xml_elements_from_props()
 
-    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict)
+    list1=[]
 #    print(kind_dict)
-    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict)
+    list1=getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context)
+    list2=getLexemes(db2,file_name,kind_dict,type_dict,token_dict,lexeme_context_new)
+    print(lexeme_context)
+    print(lexeme_context_new)
+    getModifications(lexeme_context,lexeme_context_new)
     diff_result = diff.diff_result(list1,list2)
     for key in diff_result:
         val = diff_result[key][2:]
         sign = diff_result[key][0:1]
-
         if val in token_dict:
             if token_dict[val] in accepted_token_types:
                 if sign=='+':
                     status="Added"
                 elif sign=='-':
                     status="Removed"
-                print(status)
+#                print(status)
                 if val in xml_elements:
                     elem = ET.SubElement(class_elem, "change")
                     token_elem = ET.SubElement(elem,xml_elements[val])
