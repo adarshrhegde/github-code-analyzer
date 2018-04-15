@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import operator
 
 #parse the xml tree and get the root element of the tree
-tree = ET.parse("C:\\Users\\ashwa\\Dropbox\\2018\\march18\\ASE\\new\\ashwani\\adarsh_hegde_ashwani_khemani_srinath_kv_hw2\\ashwani\\changes.xml")
+tree = ET.parse("changes.xml")
 root = tree.getroot()
 
 #print(root)
