@@ -78,7 +78,7 @@ def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context,loop_c
         
 def xml_elements_from_props():
 	myprops = {}
-	with open('../elements.properties', 'r') as f:
+	with open('elements.properties', 'r') as f:
 	    for line in f:
 	        line = line.rstrip() #removes trailing whitespace and '\n' chars
 
