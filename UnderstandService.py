@@ -2,6 +2,7 @@
 """
 
 Service Fetch understand metadata data (entities and relationships, lexemes )
+and analyzes the patches 
 
 """
 
@@ -166,6 +167,7 @@ def execute(db,db2,name, pkg_structure):
         class_elem = ET.SubElement(root, "class")
         class_elem.set("name",class10.simplename())
         class_elem.set("type","Added")
+        class_elem.set("name","class")
 
     
     for file in file_deleted:
@@ -174,6 +176,7 @@ def execute(db,db2,name, pkg_structure):
         class_elem = ET.SubElement(root, "class")
         class_elem.set("name",class10.simplename())
         class_elem.set("type","deleted")
+        class_elem.set("name","class")
 
       
     if(not (bool(filenames))):
@@ -227,6 +230,7 @@ def analyze(db,db2,name,file_name,class_elem):
                     elem = ET.SubElement(class_elem, "change")
                     token_elem = ET.SubElement(elem,xml_elements[val])
                     elem.set("type",status)
+                    elem.set("name",val)
 
     changes=getModifications(lexeme_context,lexeme_context_new)
     changes_loops=(getModifications(loop_context,loop_context_new))
@@ -240,13 +244,16 @@ def analyze(db,db2,name,file_name,class_elem):
             if(change[0]=='for'):
                 param.set("condition",change[1].split(';')[1])
             elem.set("type",change[len(change)-1])
+            elem.set("name",change[0]+"statement")
+            
         elif(change[len(change)-1]=='modified'):
             elem1 = ET.SubElement(class_elem, "change")
             param1 = ET.SubElement(elem1, change[0]+"statement")
             param1.set("changecondition","True")
             param1.set("condition",change[2])
             elem1.set("type",change[len(change)-1])
-        
+            elem.set("name",change[0]+"statement")
+            
     for change in changes:   
         if(change[0] in data_types and change[1] in data_types):
             elem = ET.SubElement(class_elem, "change")
@@ -254,6 +261,7 @@ def analyze(db,db2,name,file_name,class_elem):
             param.set("oldType",change[0])    
             param.set("newType",change[1])
             elem.set("type","Modified")
+            elem.set("name","variableDefinition")
         
         if(change[0] in data_types and change[1]=="added"):
             elem = ET.SubElement(class_elem, "change")
@@ -261,11 +269,14 @@ def analyze(db,db2,name,file_name,class_elem):
             param.set("oldType","None")    
             param.set("newType",change[0])
             elem.set("type","Added")        
+            elem.set("name","variableDefinition")
+ 
         if(change[0] in data_types and change[1]=="deleted"):
             elem = ET.SubElement(class_elem, "change")
             param = ET.SubElement(elem, "parameter")
             param.set("oldType",change[0])    
             param.set("newType","None")
             elem.set("type","Deleted")
-
+            elem.set("name","variableDefinition")
+ 
 

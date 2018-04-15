@@ -89,18 +89,19 @@ Starting with a class, compare methods, parameters within methods and get the ch
 def generate(db,db2,filename,class_elem):
     file1 = db.lookup(filename,"file")[0]
     file2 = db2.lookup(filename,"file")[0]    
-    class10 = [sel_class for sel_class in db.lookup(filename.split(".")[0],"class") if sel_class.parent() == file1][0]
-    class11 = [sel_class for sel_class in db2.lookup(filename.split(".")[0],"class") if sel_class.parent() == file2][0]
-    class_name1 = class10.longname()
-    class_name2 = class11.longname()
+    class10 = [sel_class for sel_class in db.lookup(filename.split(".")[0],"class") if sel_class.parent() == file1]
+    class11 = [sel_class for sel_class in db2.lookup(filename.split(".")[0],"class") if sel_class.parent() == file2]
+    if class10:
+        class_name1 = class10[0].longname()
+    if class11:
+        class_name2 = class11[0].longname()
     G1 = create_graph()
     G2 = create_graph()
-    create_class_node(G1, db, class10)
-    create_class_node(G2, db2, class11)
-
-    common_methods = compare_class_methods(G1, G2, class_name1, class_name2, class_elem)
-
-    compare_method_nodes(G1, G2, common_methods, class_elem)
+    if class10 and class11:
+        create_class_node(G1, db, class10[0])
+        create_class_node(G2, db2, class11[0])
+        common_methods = compare_class_methods(G1, G2, class_name1, class_name2, class_elem)
+        compare_method_nodes(G1, G2, common_methods, class_elem)
 
 
 """
@@ -110,6 +111,8 @@ def add_xml_element(class_elem, element, status, elem_type):
     elem = ET.SubElement(class_elem, "change")
     token_elem = ET.SubElement(elem, elem_type)
     elem.set("type",status)
+    elem.set("name","method")
+
     token_elem.text = element
 
 def add_outer_xml_element(class_elem, element, elem_type):
