@@ -21,23 +21,14 @@ def getModifications(lexeme_context,lexeme_context_new):
     for key in lexeme_context.keys():
         if key in lexeme_context_new.keys():
             if(len(lexeme_context[key])>1):
-#                print(lexeme_context[key])
-#                print(lexeme_context_new[key])
                 if(lexeme_context[key][1]==lexeme_context_new[key][1]):
-#                    print(lexeme_context[key][0])
-#                    print(lexeme_context_new[key][0])
                     if(lexeme_context[key][0]!=lexeme_context_new[key][0]):
-#                        print(lexeme_context[key][0])
-#                        print(lexeme_context_new[key][0])
                         list_changes.append((key,str(lexeme_context[key][0]),str(lexeme_context_new[key][0]),"modified"))
         else:
             list_changes.append((str(lexeme_context[key][0]),"deleted"))
-#    print("new"+str(lexeme_context_new.keys()))
-#    print("old"+str(lexeme_context.keys()))
     for key in lexeme_context_new.keys():
         if key not in lexeme_context.keys():
             list_changes.append((key,str(lexeme_context_new[key][0]),"added"))
-#    print(list_changes)
     return list_changes
 
 """
@@ -85,7 +76,6 @@ def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context,loop_c
                 next_lexeme=next_lexeme.next()
                 if(not next_lexeme.text()==')'):
                     getcondtion+=next_lexeme.text()
-#            print(getcondtion)  
             loop_context[lexeme.text()]=[getcondtion]
             loop_context[lexeme.text()].append(lexeme.line_begin())
 
@@ -95,17 +85,13 @@ def getLexemes(db,file_name,kind_dict,type_dict,token_dict,lexeme_context,loop_c
             type_dict[lexeme.text()] = lexeme.ent().type();
             if(lexeme.ent().type()!='NoneType'):
                 for eref in lexeme.ent().refs():
-#                    if(eref.kind().name()=='Define'):
                     if lexeme.text() in lexeme_context.keys():
                         lexeme_context[lexeme.text()].append(eref.line()) 
-#                        lexeme_context[lexeme.text()].append(eref.kind())
         else:
             if(str(lexeme.token()) not in ('Whitespace','Punctuation','Newline')):
                 token_dict[lexeme.text()] = lexeme.token()
                 if lexeme.text() in lexeme_context.keys():
                     lexeme_context[lexeme.text()].append(lexeme.line_begin())
-#    print(list1)
-#    print(loop_context)
     return list1
 
 
@@ -171,6 +157,25 @@ def execute(db,db2,name, pkg_structure):
     file_set2 = get_filenames(db2, '.java',pkg_structure)
     filenames = set.intersection(file_set1,file_set2)
 
+    file_deleted=file_set1.difference(file_set2)
+    file_added=file_set2.difference(file_set1)
+   
+    for file in file_added:
+        file2 = db2.lookup(file,"file")[0]    
+        class10 = [sel_class for sel_class in db2.lookup(file.split(".")[0],"class") if sel_class.parent() == file2][0]
+        class_elem = ET.SubElement(root, "class")
+        class_elem.set("name",class10.simplename())
+        class_elem.set("type","Added")
+
+    
+    for file in file_deleted:
+        file1 = db.lookup(file,"file")[0]
+        class10 = [sel_class for sel_class in db.lookup(file.split(".")[0],"class") if sel_class.parent() == file1][0]
+        class_elem = ET.SubElement(root, "class")
+        class_elem.set("name",class10.simplename())
+        class_elem.set("type","deleted")
+
+      
     if(not (bool(filenames))):
         print('No changes done')
         
@@ -228,9 +233,7 @@ def analyze(db,db2,name,file_name,class_elem):
 
     loop_constructs={'if','for','while','do'}
     for change in changes_loops:
-#        print(change)
         if(change[0] in loop_constructs and change[len(change)-1]!='modified'):
-#            print(change)
             elem = ET.SubElement(class_elem, "change")
             param = ET.SubElement(elem, change[0]+"statement")
             param.set("addcondition","True")
@@ -238,7 +241,6 @@ def analyze(db,db2,name,file_name,class_elem):
                 param.set("condition",change[1].split(';')[1])
             elem.set("type",change[len(change)-1])
         elif(change[len(change)-1]=='modified'):
-#            print(change)
             elem1 = ET.SubElement(class_elem, "change")
             param1 = ET.SubElement(elem1, change[0]+"statement")
             param1.set("changecondition","True")
