@@ -67,16 +67,16 @@ def compare_method_nodes(G1, G2, common_methods, class_element):
 
 # compare methods within a class
 def compare_class_methods(G1, G2, class_name1, class_name2, class_element):    
+
+    print('Comparing class methods for class ', class_name1)
     methods_1 = [method_node for method_node in G1.neighbors(class_name1) if "Method" in G1[class_name1][method_node]['relationship'].name()]
     methods_2 = [method_node for method_node in G2.neighbors(class_name2) if "Method" in G2[class_name2][method_node]['relationship'].name()]
     
     only_methods_1 = [x for x in methods_1 if x not in methods_2]
     [add_xml_element(class_element, x, "deleted","method") for x in only_methods_1]
-    print("Methods only in 1", only_methods_1)
     
     only_methods_2 = [x for x in methods_2 if x not in methods_1]
     [add_xml_element(class_element, x, "added","method") for x in only_methods_2]
-    print("Methods only in 2", only_methods_2)
 
     common_methods = [x for x in methods_1 if x in methods_2]
     return common_methods
@@ -87,6 +87,8 @@ Generate graph for classes in a file using entities and generate relationships u
 Starting with a class, compare methods, parameters within methods and get the changes
 """
 def generate(db,db2,filename,class_elem):
+
+    print('Generate graph for file ', filename)
     file1 = db.lookup(filename,"file")[0]
     file2 = db2.lookup(filename,"file")[0]    
     class10 = [sel_class for sel_class in db.lookup(filename.split(".")[0],"class") if sel_class.parent() == file1]
