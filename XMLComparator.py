@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import operator
 
 #parse the xml tree and get the root element of the tree
-tree = ET.parse("changes.xml")
+tree = ET.parse("C:\\Users\\ashwa\\Dropbox\\2018\\march18\\ASE\\new\\ashwani\\adarsh_hegde_ashwani_khemani_srinath_kv_hw2\\ashwani\\changes.xml")
 root = tree.getroot()
 
 #print(root)
@@ -17,9 +17,9 @@ child=root.findall("./")
 issue_count=dict()
 
 #list of change types
-change_type=['objectCreation','tryblock','catchBlock','throwStatement','switchStatement','inheritance',
-             'dependency','variableDefinition','ifstatement','forStatement',
-             'whileStatement','doStatement','method','class']
+change_type=['objectCreation','tryblock','catchBlock','throwstatement','switchstatement','inheritance',
+             'dependency','variableDefinition','ifstatement','forstatement',
+             'whilestatement','dostatement','method','class']
 
 #update the global frequency for the change type
 def update_count(i,name):
