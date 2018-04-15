@@ -1,23 +1,30 @@
 # -*- coding: utf-8 -*-
+
+#Service to find the most common changes across all projets #
+
 import xml.etree.ElementTree as ET
 import operator
 
 #parse the xml tree and get the root element of the tree
-tree = ET.parse("out.xml")
+tree = ET.parse("C:\\Users\\ashwa\\Dropbox\\2018\\march18\\ASE\\new\\ashwani\\adarsh_hegde_ashwani_khemani_srinath_kv_hw2\\ashwani\\changes.xml")
 root = tree.getroot()
 
+#print(root)
 # All 'project' children of the top-level
-child=root.findall("./project")
-
+child=root.findall("./")
+#print(child)
 #global count for all issues
 issue_count=dict()
 
 #list of change types
-change_type=['Austria','Costa','Costa Rica']
+change_type=['objectCreation','tryblock','catchBlock','throwStatement','switchStatement','inheritance',
+             'dependency','variableDefinition','ifstatement','forStatement',
+             'whileStatement','doStatement','method','class']
 
 #update the global frequency for the change type
 def update_count(i,name):
-    result=i.findall(".//parameter/..[@name='"+name+"']")
+    result=i.findall(".//change[@name='"+name+"']")
+    print(result)
     for j in range(len(result)):
         if name in issue_count:
             issue_count[name]+=1
@@ -26,6 +33,7 @@ def update_count(i,name):
 
 #find frequency of particular type of change across all projects
 for node in child:
+    print(node)
     for change in change_type:
         update_count(node,change)
   
